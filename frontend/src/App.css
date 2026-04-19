@@ -1,38 +1,72 @@
-.App {
-  text-align: center;
+/* Pingala Theme Colors */
+:root {
+  --pingala-red: #D32F2F;
+  --pingala-teal: #4DB6AC;
+  --sidebar-dark: #263238;
+  --bg-light: #f4f7f6;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.app-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: var(--sidebar-dark);
   color: white;
+  padding: 20px 0;
 }
 
-.App-link {
-  color: #61dafb;
+.sidebar-logo {
+  font-size: 24px;
+  font-weight: bold;
+  padding: 0 20px 20px;
+  border-bottom: 1px solid #37474f;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Main Content */
+.main-content {
+  flex: 1;
+  background: var(--bg-light);
+  overflow-y: auto;
 }
+
+.header {
+  background: var(--pingala-red);
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.content-body {
+  padding: 20px;
+}
+
+/* Table Styling */
+.course-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.course-table th {
+  background: var(--pingala-teal);
+  color: white;
+  padding: 12px;
+  text-align: left;
+}
+
+.course-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.status-submitted { color: green; font-weight: bold; }
+.status-dropped { color: red; font-weight: bold; }
