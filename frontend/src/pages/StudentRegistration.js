@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { courseService } from '../services/api';
-import { FileText, Printer, Search, PlusCircle } from 'lucide-react';
+import { useState } from 'react';
 
 const StudentRegistration = () => {
   const [courses, setCourses] = useState([
@@ -21,13 +19,13 @@ const StudentRegistration = () => {
 
       {/* Action Buttons */}
       <div className="flex space-x-2 overflow-x-auto py-2">
-        <button className="flex items-center bg-gray-800 text-white px-3 py-1 text-sm rounded"><PlusCircle size={14} className="mr-1"/> Request Course</button>
-        <button className="flex items-center border border-gray-300 px-3 py-1 text-sm rounded"><FileText size={14} className="mr-1"/> Show Progress</button>
-        <button className="flex items-center border border-gray-300 px-3 py-1 text-sm rounded"><Printer size={14} className="mr-1"/> Print Form</button>
+        <button type="button" className="flex items-center bg-gray-800 text-white px-3 py-1 text-sm rounded">+ Request course</button>
+        <button type="button" className="flex items-center border border-gray-300 px-3 py-1 text-sm rounded">Show progress</button>
+        <button type="button" className="flex items-center border border-gray-300 px-3 py-1 text-sm rounded">Print form</button>
       </div>
 
       {/* Course Table */}
-      <div className="bg-white shadow rounded-sm overflow-hidden">
+      <div className="table-wrap">
         <table className="min-w-full text-xs text-left">
           <thead className="bg-[#4DB6AC] text-white">
             <tr>

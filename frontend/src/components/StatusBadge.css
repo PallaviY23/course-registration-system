@@ -1,0 +1,28 @@
+.reg-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reg-status--requested,
+.reg-status--pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.reg-status--accepted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.reg-status--rejected {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.reg-status--waitlisted {
+  background: #e3f2fd;
+  color: #1565c0;
+}
