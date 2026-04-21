@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import TablePager from '../components/TablePager';
 
 const StudentRegistration = () => {
   const [courses, setCourses] = useState([
@@ -6,6 +7,15 @@ const StudentRegistration = () => {
     { id: 'CE683', name: 'HUMANS, ENVIRONMENT AND SUSTAINABLE DEV', instructor: 'MANOJ TIWARI', credits: 9, status: 'Form Submitted', type: 'DE' },
     { id: 'CS610', name: 'PROGRAMMING FOR PERFORMANCE', instructor: 'SWARNENDU BISWAS', credits: 9, status: 'Auto Dropped', type: 'DE' },
   ]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState('10');
+  const totalPages =
+    pageSize === 'all' ? 1 : Math.max(1, Math.ceil(courses.length / Number(pageSize || 10)));
+  const safePage = Math.min(page, totalPages);
+  const visibleCourses =
+    pageSize === 'all'
+      ? courses
+      : courses.slice((safePage - 1) * Number(pageSize), (safePage - 1) * Number(pageSize) + Number(pageSize));
 
   return (
     <div className="space-y-4">
@@ -38,7 +48,7 @@ const StudentRegistration = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {courses.map((course, idx) => (
+            {visibleCourses.map((course, idx) => (
               <tr key={idx} className="hover:bg-gray-50">
                 <td className="p-3 font-medium text-blue-600">{course.id}</td>
                 <td className="p-3">{course.name}</td>
@@ -55,6 +65,16 @@ const StudentRegistration = () => {
           </tbody>
         </table>
       </div>
+      <TablePager
+        total={courses.length}
+        page={safePage}
+        pageSize={pageSize}
+        onPageChange={(next) => setPage(Math.min(Math.max(next, 1), totalPages))}
+        onPageSizeChange={(next) => {
+          setPageSize(next);
+          setPage(1);
+        }}
+      />
     </div>
   );
 };

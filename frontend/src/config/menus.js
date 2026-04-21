@@ -4,10 +4,10 @@ export const STUDENT_MENU = [
   {
     id: 'Academics',
     items: [
-      { key: 'add-drop-25262', label: 'Add/Drop (2025-26/2)' },
-      { key: 'summer-25263', label: 'Summer Registration (2025-26/3)' },
-      { key: 'hss-26271', label: 'HSS Management (2026-27/1)' },
-      { key: 'pre-reg-26271', label: 'Pre-Registration (2026-27/1)' },
+      { key: 'add-drop-25262', label: 'Add/Drop (2025-26/2)', status: 'open' },
+      { key: 'summer-25263', label: 'Summer Registration (2025-26/3)', status: 'open' },
+      { key: 'hss-26271', label: 'HSS Management (2026-27/1)', status: 'closed' },
+      { key: 'pre-reg-26271', label: 'Pre-Registration (2026-27/1)', status: 'open' },
     ],
   },
   {

@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import { professorService } from '../../services/api';
 import { MOCK_INCOMING } from '../../data/mockData';
 import StatusBadge from '../../components/StatusBadge';
+import TablePager from '../../components/TablePager';
 
 export default function ProfessorIncoming() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hint, setHint] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState('10');
 
   useEffect(() => {
     let cancelled = false;
@@ -31,6 +34,14 @@ export default function ProfessorIncoming() {
     };
   }, []);
 
+  const totalPages =
+    pageSize === 'all' ? 1 : Math.max(1, Math.ceil(rows.length / Number(pageSize || 10)));
+  const safePage = Math.min(page, totalPages);
+  const visibleRows =
+    pageSize === 'all'
+      ? rows
+      : rows.slice((safePage - 1) * Number(pageSize), (safePage - 1) * Number(pageSize) + Number(pageSize));
+
   if (loading) {
     return <p className="panel-muted">Loading requests...</p>;
   }
@@ -54,7 +65,7 @@ export default function ProfessorIncoming() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {visibleRows.map((r) => (
               <tr key={`${r.student_id}-${r.course_id}`}>
                 <td>{r.student_id}</td>
                 <td>{r.name}</td>
@@ -70,6 +81,16 @@ export default function ProfessorIncoming() {
           </tbody>
         </table>
       </div>
+      <TablePager
+        total={rows.length}
+        page={safePage}
+        pageSize={pageSize}
+        onPageChange={(next) => setPage(Math.min(Math.max(next, 1), totalPages))}
+        onPageSizeChange={(next) => {
+          setPageSize(next);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }
