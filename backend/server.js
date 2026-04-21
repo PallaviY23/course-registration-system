@@ -16,5 +16,5 @@ app.get('/api/courses', (req, res) => {
   res.json(courses);
 });
 
-const PORT = 5000;
+const PORT = Number(process.env.PORT) || 5000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

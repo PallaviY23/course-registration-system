@@ -73,8 +73,8 @@ const ROLE_VIEWS = {
 /** Sidebar sentinel when About is open — never matches a real menu section id */
 const ABOUT_SECTION_ID = '__about__';
 
-const SIDEBAR_WIDTH_DEFAULT = 260;
-const SIDEBAR_WIDTH_MIN = 180;
+const SIDEBAR_WIDTH_DEFAULT = 320;
+const SIDEBAR_WIDTH_MIN = 260;
 const SIDEBAR_WIDTH_MAX = 560;
 
 function App() {

@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { professorService } from '../../services/api';
 import { MOCK_COURSES } from '../../data/mockData';
+import TablePager from '../../components/TablePager';
 
 export default function ProfessorMyCourses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hint, setHint] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState('10');
 
   useEffect(() => {
     let cancelled = false;
@@ -30,6 +33,14 @@ export default function ProfessorMyCourses() {
     };
   }, []);
 
+  const totalPages =
+    pageSize === 'all' ? 1 : Math.max(1, Math.ceil(courses.length / Number(pageSize || 10)));
+  const safePage = Math.min(page, totalPages);
+  const visibleCourses =
+    pageSize === 'all'
+      ? courses
+      : courses.slice((safePage - 1) * Number(pageSize), (safePage - 1) * Number(pageSize) + Number(pageSize));
+
   if (loading) {
     return <p className="panel-muted">Loading courses...</p>;
   }
@@ -53,7 +64,7 @@ export default function ProfessorMyCourses() {
             </tr>
           </thead>
           <tbody>
-            {courses.map((c) => {
+            {visibleCourses.map((c) => {
               const id = c.course_id || c.id;
               return (
                 <tr key={id}>
@@ -70,6 +81,16 @@ export default function ProfessorMyCourses() {
           </tbody>
         </table>
       </div>
+      <TablePager
+        total={courses.length}
+        page={safePage}
+        pageSize={pageSize}
+        onPageChange={(next) => setPage(Math.min(Math.max(next, 1), totalPages))}
+        onPageSizeChange={(next) => {
+          setPageSize(next);
+          setPage(1);
+        }}
+      />
     </div>
   );
 }

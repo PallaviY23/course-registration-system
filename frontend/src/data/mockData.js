@@ -5,7 +5,7 @@
  * the DB schema currently keys students by `student_id` only.
  */
 export const STUDENT_EMAIL_BY_ROLL = {
-  '230029': 'aayushman.k@iitk.ac.in',
+  '230029': 'aayushmank23@iitk.ac.in',
 };
 
 /** Mirrors a future `students.phone` field; used for masked reset messaging only. */
