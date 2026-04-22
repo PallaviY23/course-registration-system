@@ -1,89 +1,66 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------
--- STUDENTS
+-- USERS (Admin, Professors, Students)
 -- ----------------------
-INSERT INTO students (student_id, name, dept, year, cpi) VALUES
-('S001', 'Amit Sharma', 'CSE', 3, 8.75),
-('S002', 'Neha Verma', 'CSE', 2, 9.10),
-('S003', 'Ravi Kumar', 'EE', 4, 7.80),
-('S004', 'Priya Singh', 'ME', 1, 8.20),
-('S005', 'Arjun Das', 'CSE', 3, 9.50);
+INSERT INTO users (username, email, phone, password_hash, role, is_active, last_login) VALUES
+-- Admin
+('admin', 'admin@iitk.ac.in', '9999999999', '$2b$10$admin_hash_placeholder', 'admin', TRUE, NULL),
+-- Professors
+('mehta', 'mehta@iitk.ac.in', '9876543210', '$2b$10$prof1_hash_placeholder', 'professor', TRUE, NULL),
+('iyer', 'iyer@iitk.ac.in', '9876543211', '$2b$10$prof2_hash_placeholder', 'professor', TRUE, NULL),
+('gupta', 'gupta@iitk.ac.in', '9876543212', '$2b$10$prof3_hash_placeholder', 'professor', TRUE, NULL),
+-- Students
+('amit_sharma', 'amit.sharma@iitk.ac.in', '9111111111', '$2b$10$student1_hash_placeholder', 'student', TRUE, NULL),
+('neha_verma', 'neha.verma@iitk.ac.in', '9111111112', '$2b$10$student2_hash_placeholder', 'student', TRUE, NULL),
+('ravi_kumar', 'ravi.kumar@iitk.ac.in', '9111111113', '$2b$10$student3_hash_placeholder', 'student', TRUE, NULL),
+('priya_singh', 'priya.singh@iitk.ac.in', '9111111114', '$2b$10$student4_hash_placeholder', 'student', TRUE, NULL),
+('arjun_das', 'arjun.das@iitk.ac.in', '9111111115', '$2b$10$student5_hash_placeholder', 'student', TRUE, NULL);
 
 -- ----------------------
--- PROFESSORS
+-- ACADEMICS (Current Semester)
 -- ----------------------
-INSERT INTO professors (prof_id, name, dept, prof_email) VALUES
-('P001', 'Dr. Mehta', 'CSE', 'mehta@iitk.ac.in'),
-('P002', 'Dr. Iyer', 'EE', 'iyer@iitk.ac.in'),
-('P003', 'Dr. Gupta', 'ME', 'gupta@iitk.ac.in');
+INSERT INTO academics (type, year_start, year_end, sem_number, start_date, end_date, is_active) VALUES
+('semester', 2025, 2026, 2, '2026-01-15', '2026-05-31', TRUE);
 
 -- ----------------------
 -- COURSES
 -- ----------------------
-INSERT INTO courses (course_id, course_name, course_credit, prof_id, max_seats, offering_dept) VALUES
-('CS101', 'Data Structures', 4, 'P001', 2, 'CSE'),
-('CS102', 'Operating Systems', 4, 'P001', 2, 'CSE'),
-('EE101', 'Circuits', 3, 'P002', 2, 'EE'),
-('ME101', 'Thermodynamics', 3, 'P003', 2, 'ME');
+INSERT INTO courses (course_code, course_name, credits, max_seats, professor_id, department) VALUES
+('CS371', 'Design of Reinforced Concrete Structures', 9, 45, 2, 'CSE'),
+('CS610', 'Programming for Performance', 9, 40, 2, 'CSE'),
+('CE683', 'Humans, Environment and Sustainable Development', 9, 50, 3, 'CE');
 
 -- ----------------------
--- COURSE MEETINGS
+-- COURSE PREREQUISITES
 -- ----------------------
-INSERT INTO course_meetings (course_id, meeting_type, day_of_week, start_time, end_time) VALUES
-('CS101', 'LECTURE', 1, '09:00:00', '10:00:00'),
-('CS101', 'LAB', 3, '14:00:00', '16:00:00'),
-('CS102', 'LECTURE', 2, '10:00:00', '11:00:00'),
-('EE101', 'LECTURE', 1, '11:00:00', '12:00:00'),
-('ME101', 'LECTURE', 4, '09:00:00', '10:00:00');
+INSERT INTO course_prerequisites (course_id, prerequisite_course_id) VALUES
+(2, 1);  -- CS610 requires CS371
 
 -- ----------------------
--- PREREQUISITES
+-- PRIORITY RULES (Per-course weights)
 -- ----------------------
-INSERT INTO prerequisites (course_id, prereq_course_id) VALUES
-('CS102', 'CS101');
+INSERT INTO priority_rules (course_id, weight_cpi, weight_year, weight_first_come, weight_dept_match, weight_major_intent, weight_minor_intent, weight_elective_intent) VALUES
+(1, 1.0, 0.1, 0.01, 0.5, 1.0, 0.6, 0.4),
+(2, 1.0, 0.1, 0.01, 0.5, 1.0, 0.6, 0.4),
+(3, 1.0, 0.1, 0.01, 0.5, 1.0, 0.6, 0.4);
 
 -- ----------------------
--- PRIORITY RULES
+-- ENROLLMENTS (Course Requests)
 -- ----------------------
-INSERT INTO priority_rules (course_id, weight_cpi, weight_year, weight_first_come, weight_dept) VALUES
-('CS101', 1.0, 0.2, 0.05, 0.5),
-('CS102', 1.2, 0.3, 0.05, 0.6),
-('EE101', 1.0, 0.2, 0.05, 0.5),
-('ME101', 1.0, 0.2, 0.05, 0.5);
-
--- ----------------------
--- REQUESTS
--- ----------------------
-INSERT INTO requests (student_id, course_id, status, request_intent) VALUES
-('S001', 'CS101', 'requested', 'major'),
-('S002', 'CS101', 'requested', 'major'),
-('S005', 'CS101', 'requested', 'major'), -- overflow → waitlist candidate
-('S003', 'EE101', 'requested', 'major'),
-('S004', 'ME101', 'requested', 'elective'),
-('S001', 'CS102', 'requested', 'minor');
-
--- ----------------------
--- PRIORITY SCORES (mock values)
--- ----------------------
-INSERT INTO priority_scores (student_id, course_id, score) VALUES
-('S001', 'CS101', 8.9),
-('S002', 'CS101', 9.3),
-('S005', 'CS101', 9.6),
-('S003', 'EE101', 7.8),
-('S004', 'ME101', 8.2);
-
--- ----------------------
--- ENROLLMENTS (fill seats manually)
--- ----------------------
-INSERT INTO enrollments (student_id, course_id) VALUES
-('S002', 'CS101'),
-('S005', 'CS101');  -- CS101 now FULL
-
--- ----------------------
--- WAITLIST
--- ----------------------
-INSERT INTO waitlist (student_id, course_id, position) VALUES
-('S001', 'CS101', 1); -- waiting
+INSERT INTO enrollments (user_id, course_id, sem_number, intent, status, requested_at) VALUES
+-- Student 1: Amit Sharma
+(6, 1, 2, 'major', 'pending', NOW()),
+(6, 2, 2, 'major', 'pending', NOW()),
+-- Student 2: Neha Verma
+(7, 1, 2, 'major', 'pending', NOW()),
+(7, 2, 2, 'minor', 'pending', NOW()),
+-- Student 3: Ravi Kumar
+(8, 3, 2, 'major', 'pending', NOW()),
+-- Student 4: Priya Singh
+(9, 3, 2, 'elective', 'pending', NOW()),
+-- Student 5: Arjun Das
+(10, 1, 2, 'major', 'pending', NOW()),
+(10, 2, 2, 'major', 'pending', NOW());
 
 SET FOREIGN_KEY_CHECKS = 1;

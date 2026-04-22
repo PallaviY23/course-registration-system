@@ -1,163 +1,115 @@
 -- Course Registration System — normalized schema (MySQL 8+)
--- Meeting types are in course_meetings (not duplicated course attributes per row).
--- Lab / tutorial / lecture differ only by meeting_type + times; course_id FK avoids repeating course metadata.
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-DROP TABLE IF EXISTS waitlist;
 DROP TABLE IF EXISTS enrollments;
-DROP TABLE IF EXISTS priority_scores;
+DROP TABLE IF EXISTS course_prerequisites;
 DROP TABLE IF EXISTS priority_rules;
-DROP TABLE IF EXISTS requests;
-DROP TABLE IF EXISTS prerequisites;
-DROP TABLE IF EXISTS course_meetings;
 DROP TABLE IF EXISTS courses;
-DROP TABLE IF EXISTS professors;
-DROP TABLE IF EXISTS students;
+DROP TABLE IF EXISTS academics;
+DROP TABLE IF EXISTS forgot_password;
+DROP TABLE IF EXISTS users;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
-CREATE TABLE students (
-  student_id VARCHAR(32) NOT NULL PRIMARY KEY,
-  name VARCHAR(128) NOT NULL,
-  dept VARCHAR(16) NOT NULL,
-  year TINYINT NOT NULL,
-  cpi DECIMAL(4,2) NOT NULL DEFAULT 0.00,
+-- Users table (unified for students and professors)
+CREATE TABLE users (
+  user_id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(255) NOT NULL UNIQUE,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  phone VARCHAR(20),
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('student', 'professor', 'admin') NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  last_login TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-CREATE TABLE professors (
-  prof_id VARCHAR(32) NOT NULL PRIMARY KEY,
-  name VARCHAR(128) NOT NULL,
-  dept VARCHAR(16) NOT NULL,
-  prof_email VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB;
-
-CREATE TABLE courses (
-  course_id VARCHAR(32) NOT NULL PRIMARY KEY,
-  course_name VARCHAR(255) NOT NULL,
-  course_credit TINYINT NOT NULL,
-  prof_id VARCHAR(32) NOT NULL,
-  max_seats INT NOT NULL DEFAULT 0,
-  offering_dept VARCHAR(16) NOT NULL,
+-- Forgot Password table for password recovery
+CREATE TABLE forgot_password (
+  user_id INT NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  expires_at TIMESTAMP NOT NULL,
+  is_used BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_courses_prof FOREIGN KEY (prof_id) REFERENCES professors(prof_id)
+  PRIMARY KEY (user_id, token),
+  CONSTRAINT fk_forgot_password_user FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON UPDATE CASCADE ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Academic periods/semesters table
+CREATE TABLE academics (
+  academic_id INT AUTO_INCREMENT PRIMARY KEY,
+  type ENUM('semester', 'summer', 'special') NOT NULL,
+  year_start INT NOT NULL,
+  year_end INT NOT NULL,
+  sem_number INT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  is_active BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Courses table
+CREATE TABLE courses (
+  course_id INT AUTO_INCREMENT PRIMARY KEY,
+  course_code VARCHAR(32) NOT NULL UNIQUE,
+  course_name VARCHAR(255) NOT NULL,
+  credits INT NOT NULL,
+  max_seats INT NOT NULL DEFAULT 0,
+  professor_id INT NOT NULL,
+  department VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_courses_professor FOREIGN KEY (professor_id) REFERENCES users(user_id)
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
--- One row per actual calendar meeting (lecture / tutorial / lab); 3NF — no repeated course_name here.
-CREATE TABLE course_meetings (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  course_id VARCHAR(32) NOT NULL,
-  meeting_type ENUM('LECTURE', 'TUTORIAL', 'LAB') NOT NULL,
-  day_of_week TINYINT NOT NULL COMMENT '1=Monday .. 7=Sunday',
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  CONSTRAINT fk_meetings_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
+CREATE INDEX idx_courses_professor ON courses(professor_id);
+CREATE INDEX idx_courses_code ON courses(course_code);
+
+-- Course prerequisites table
+CREATE TABLE course_prerequisites (
+  course_id INT NOT NULL,
+  prerequisite_course_id INT NOT NULL,
+  PRIMARY KEY (course_id, prerequisite_course_id),
+  CONSTRAINT fk_prereq_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
     ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT chk_time CHECK (start_time < end_time)
+  CONSTRAINT fk_prereq_prerequisite FOREIGN KEY (prerequisite_course_id) REFERENCES courses(course_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT chk_prereq_neq CHECK (course_id <> prerequisite_course_id)
 ) ENGINE=InnoDB;
 
-CREATE INDEX idx_meetings_course ON course_meetings(course_id);
-CREATE INDEX idx_meetings_day_time ON course_meetings(day_of_week, start_time, end_time);
-
-CREATE TABLE prerequisites (
-  course_id VARCHAR(32) NOT NULL,
-  prereq_course_id VARCHAR(32) NOT NULL,
-  PRIMARY KEY (course_id, prereq_course_id),
-  CONSTRAINT fk_pre_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT fk_pre_prereq FOREIGN KEY (prereq_course_id) REFERENCES courses(course_id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT chk_pre_neq CHECK (course_id <> prereq_course_id)
-) ENGINE=InnoDB;
-
-CREATE TABLE requests (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  student_id VARCHAR(32) NOT NULL,
-  course_id VARCHAR(32) NOT NULL,
-  status ENUM('requested', 'accepted', 'rejected', 'waitlisted') NOT NULL DEFAULT 'requested',
-  -- major/minor/elective drives priority weights with priority_rules
-  request_intent ENUM('major', 'minor', 'elective') NOT NULL DEFAULT 'major',
-  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_req_student FOREIGN KEY (student_id) REFERENCES students(student_id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT fk_req_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  UNIQUE KEY uq_student_course (student_id, course_id)
-) ENGINE=InnoDB;
-
-CREATE INDEX idx_requests_course_status ON requests(course_id, status);
-
--- Per-course weight knobs (CPI, year, first-come, dept match, major vs minor vs elective)
+-- Priority rules table (per-course weight configuration)
 CREATE TABLE priority_rules (
-  course_id VARCHAR(32) NOT NULL PRIMARY KEY,
+  priority_rule_id INT AUTO_INCREMENT PRIMARY KEY,
+  course_id VARCHAR(32) NOT NULL,
   weight_cpi DECIMAL(8,4) NOT NULL DEFAULT 1.0,
   weight_year DECIMAL(8,4) NOT NULL DEFAULT 0.1,
   weight_first_come DECIMAL(8,4) NOT NULL DEFAULT 0.01,
-  weight_dept DECIMAL(8,4) NOT NULL DEFAULT 0.5,
-  weight_major DECIMAL(8,4) NOT NULL DEFAULT 1.0,
-  weight_minor DECIMAL(8,4) NOT NULL DEFAULT 0.6,
-  weight_elective DECIMAL(8,4) NOT NULL DEFAULT 0.4,
-  CONSTRAINT fk_pr_rules_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
-    ON UPDATE CASCADE ON DELETE CASCADE
+  weight_dept_match DECIMAL(8,4) NOT NULL DEFAULT 0.5,
+  weight_major_intent DECIMAL(8,4) NOT NULL DEFAULT 1.0,
+  weight_minor_intent DECIMAL(8,4) NOT NULL DEFAULT 0.6,
+  weight_elective_intent DECIMAL(8,4) NOT NULL DEFAULT 0.4,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-CREATE TABLE priority_scores (
-  student_id VARCHAR(32) NOT NULL,
-  course_id VARCHAR(32) NOT NULL,
-  score DECIMAL(12,6) NOT NULL,
-  computed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (student_id, course_id),
-  CONSTRAINT fk_ps_student FOREIGN KEY (student_id) REFERENCES students(student_id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT fk_ps_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
-    ON UPDATE CASCADE ON DELETE CASCADE
-) ENGINE=InnoDB;
-
+-- Enrollments table with course request status and intent
 CREATE TABLE enrollments (
-  student_id VARCHAR(32) NOT NULL,
-  course_id VARCHAR(32) NOT NULL,
-  enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (student_id, course_id),
-  CONSTRAINT fk_enr_student FOREIGN KEY (student_id) REFERENCES students(student_id)
+  enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  course_id INT NOT NULL,
+  sem_number INT NOT NULL,
+  intent ENUM('major', 'minor', 'elective') NOT NULL DEFAULT 'major',
+  status ENUM('pending', 'accepted', 'rejected', 'enrolled', 'waitlisted') NOT NULL DEFAULT 'pending',
+  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_enrollments_user FOREIGN KEY (user_id) REFERENCES users(user_id)
     ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT fk_enr_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
-    ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT fk_enrollments_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  UNIQUE KEY uq_user_course_sem (user_id, course_id, sem_number)
 ) ENGINE=InnoDB;
 
-CREATE TABLE waitlist (
-  student_id VARCHAR(32) NOT NULL,
-  course_id VARCHAR(32) NOT NULL,
-  position INT NOT NULL,
-  PRIMARY KEY (student_id, course_id),
-  CONSTRAINT fk_wl_student FOREIGN KEY (student_id) REFERENCES students(student_id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT fk_wl_course FOREIGN KEY (course_id) REFERENCES courses(course_id)
-    ON UPDATE CASCADE ON DELETE CASCADE,
-  UNIQUE KEY uq_course_position (course_id, position)
-) ENGINE=InnoDB;
-
--- Optional: after a seat frees, promote first waitlisted student (see also Node promoteWaitlist)
-DELIMITER $$
-DROP TRIGGER IF EXISTS tr_enrollment_after_delete$$
-CREATE TRIGGER tr_enrollment_after_delete
-AFTER DELETE ON enrollments
-FOR EACH ROW
-BEGIN
-  DECLARE v_student VARCHAR(32);
-  SELECT student_id INTO v_student FROM waitlist
-    WHERE course_id = OLD.course_id
-    ORDER BY position ASC
-    LIMIT 1;
-  IF v_student IS NOT NULL THEN
-    INSERT INTO enrollments (student_id, course_id) VALUES (v_student, OLD.course_id);
-    DELETE FROM waitlist WHERE student_id = v_student AND course_id = OLD.course_id;
-    -- Compact positions after removing the head of the queue
-    UPDATE waitlist SET position = position - 1
-      WHERE course_id = OLD.course_id;
-  END IF;
-END$$
-DELIMITER ;
+CREATE INDEX idx_enrollments_course ON enrollments(course_id);
+CREATE INDEX idx_enrollments_status ON enrollments(status);
+CREATE INDEX idx_enrollments_user ON enrollments(user_id);
