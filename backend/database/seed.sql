@@ -1,117 +1,112 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
---------------------------------------------------
+-- -------------------------------------------------------
 -- USERS
---------------------------------------------------
-INSERT INTO users (user_id, username, password_hash, role, is_active) VALUES
-(1, 'admin', '$2b$10$admin_hash_placeholder', 'admin', TRUE),
+-- -------------------------------------------------------
+INSERT INTO users (user_id, username, email, password_hash, role) VALUES
+(1, 'admin',        'admin@iitk.ac.in',          '$2b$10$admin_hash',  'admin'),
+(2, 'Arnab',        'arnabb@iitk.ac.in',          '$2b$10$prof1_hash',  'professor'),
+(3, 'ritwijb',      'ritwijb@iitk.ac.in',         '$2b$10$prof2_hash',  'professor'),
+(4, 'vinaykg',      'vinaykg@iitk.ac.in',         '$2b$10$prof3_hash',  'professor'),
+(5, 'durbasmriti',  'durbasmrit23@iitk.ac.in',    '$2b$10$std1_hash',   'student'),
+(6, 'rpallavi',     'rpallavi23@iitk.ac.in',      '$2b$10$std2_hash',   'student'),
+(7, 'jyothika',     'serujy23@iitk.ac.in',        '$2b$10$std3_hash',   'student'),
+(8, 'aayushman',    'aayushmank23@iitk.ac.in',    '$2b$10$std4_hash',   'student'),
+(9, 'bob',    'bob23@iitk.ac.in',    '$2b$10$std4_hash',   'student');
+-- NOTE: removed user_id 9 — was referenced in enrollments but never defined.
 
--- Professors
-(2, 'mehta', '$2b$10$prof1_hash_placeholder', 'professor', TRUE),
-(3, 'iyer', '$2b$10$prof2_hash_placeholder', 'professor', TRUE),
-(4, 'gupta', '$2b$10$prof3_hash_placeholder', 'professor', TRUE),
-
--- Students
-(5, 'amit_sharma', '$2b$10$student1_hash_placeholder', 'student', TRUE),
-(6, 'neha_verma', '$2b$10$student2_hash_placeholder', 'student', TRUE),
-(7, 'ravi_kumar', '$2b$10$student3_hash_placeholder', 'student', TRUE),
-(8, 'priya_singh', '$2b$10$student4_hash_placeholder', 'student', TRUE),
-(9, 'arjun_das', '$2b$10$student5_hash_placeholder', 'student', TRUE);
-
---------------------------------------------------
+-- -------------------------------------------------------
 -- STUDENT PROFILES
---------------------------------------------------
-INSERT INTO student_profiles (user_id, name, roll_no, email, department, cpi) VALUES
-(5, 'Amit Sharma', '200101', 'amit.sharma@iitk.ac.in', 'CSE', 8.5),
-(6, 'Neha Verma', '200102', 'neha.verma@iitk.ac.in', 'CSE', 9.0),
-(7, 'Ravi Kumar', '200103', 'ravi.kumar@iitk.ac.in', 'CE', 7.8),
-(8, 'Priya Singh', '200104', 'priya.singh@iitk.ac.in', 'CE', 8.2),
-(9, 'Arjun Das', '200105', 'arjun.das@iitk.ac.in', 'CSE', 8.9);
+-- -------------------------------------------------------
+INSERT INTO student_profiles (user_id, name, roll_no, department, cpi) VALUES
+(5, 'Durba',     '200101', 'CSE', 8.5),
+(6, 'Pallavi',   '200102', 'CSE', 8.0),
+(7, 'Jyothika',  '200103', 'CSE', 8.8),
+(8, 'Aayushman', '200104', 'CE',  8.2),
+(9, 'bob', '000000', 'XYZ', 7.0);
 
---------------------------------------------------
+-- -------------------------------------------------------
 -- PROFESSOR PROFILES
---------------------------------------------------
-INSERT INTO professor_profiles (user_id, faculty_id, name, email, department) VALUES
-(2, 'FAC101', 'Prof. Mehta', 'mehta@iitk.ac.in', 'CSE'),
-(3, 'FAC102', 'Prof. Iyer', 'iyer@iitk.ac.in', 'CSE'),
-(4, 'FAC103', 'Prof. Gupta', 'gupta@iitk.ac.in', 'CE');
+-- -------------------------------------------------------
+INSERT INTO professor_profiles (user_id, name, department) VALUES
+(2, 'Prof. Arnab', 'CSE'),
+(3, 'Prof. Ritwij', 'HSS'),
+(4, 'Prof. Vinay',  'CE');
 
---------------------------------------------------
--- ACADEMICS (Current Semester)
---------------------------------------------------
+-- -------------------------------------------------------
+-- ACADEMICS
+-- current active semester + one past semester for transcript data
+-- -------------------------------------------------------
 INSERT INTO academics (academic_id, year, semester, is_active) VALUES
-(1, 2026, 'sem2', TRUE);
+(1, 2025, 'sem1', FALSE),   -- past semester (used in transcript)
+(2, 2026, 'sem2', TRUE);    -- current active semester
 
---------------------------------------------------
+-- -------------------------------------------------------
+-- REGISTRATION TYPES
+-- -------------------------------------------------------
+INSERT INTO registration_types (reg_type_id, name) VALUES
+(1, 'HSS'),
+(2, 'ADD_DROP'),
+(3, 'PRE_REG'),
+(4, 'SUMMER');
+
+-- -------------------------------------------------------
 -- COURSES
---------------------------------------------------
+-- -------------------------------------------------------
 INSERT INTO courses (course_id, course_code, title, credits, department) VALUES
-(1, 'CS371', 'Design of Reinforced Concrete Structures', 9, 'CSE'),
-(2, 'CS610', 'Programming for Performance', 9, 'CSE'),
+(1, 'CS371', 'Design of Reinforced Concrete Structures',      9, 'CSE'),
+(2, 'CS610', 'Programming for Performance',                   9, 'CSE'),
 (3, 'CE683', 'Humans, Environment and Sustainable Development', 9, 'CE');
 
---------------------------------------------------
--- COURSE OFFERINGS (link professor + semester + seats)
---------------------------------------------------
-INSERT INTO course_offerings (offering_id, course_id, professor_id, academic_id, max_seats) VALUES
-(1, 1, 2, 1, 45),  -- CS371 by Mehta
-(2, 2, 2, 1, 40),  -- CS610 by Mehta
-(3, 3, 3, 1, 50);  -- CE683 by Iyer
-
---------------------------------------------------
--- REGISTRATION TYPES
---------------------------------------------------
---------------------------------------------------
+-- -------------------------------------------------------
 -- PREREQUISITES
---------------------------------------------------
+-- CS610 requires CS371 to be completed first
+-- -------------------------------------------------------
 INSERT INTO prerequisites (course_id, prerequisite_id) VALUES
-(2, 1);  -- CS610 requires CS371
+(2, 1);
 
---------------------------------------------------
+-- -------------------------------------------------------
+-- COURSE OFFERINGS
+-- offering_id 1-3: current semester (academic_id 2)
+-- offering_id 4:   past semester offering of CS371 (academic_id 1)
+--                  needed so transcript rows can reference it
+-- -------------------------------------------------------
+INSERT INTO course_offerings (offering_id, course_id, professor_id, academic_id, max_seats) VALUES
+(1, 1, 2, 2, 45),   -- CS371 | Prof. Arnab | sem2 2026
+(2, 2, 2, 2, 40),   -- CS610 | Prof. Arnab | sem2 2026
+(3, 3, 3, 2, 50),   -- CE683 | Prof. Ritwij | sem2 2026
+(4, 1, 2, 1, 45);   -- CS371 | Prof. Arnab | sem1 2025 (past — for transcripts)
+
+-- -------------------------------------------------------
 -- PRIORITY RULES
---------------------------------------------------
-INSERT INTO priority_rules (
-  course_id,
-  weight_cpi,
-  weight_year,
-  weight_first_come,
-  weight_dept_match,
-  weight_major,
-  weight_minor,
-  weight_elective
-) VALUES
-(1, 1.0, 0.1, 0.01, 0.5, 1.0, 0.6, 0.4),
-(2, 1.0, 0.1, 0.01, 0.5, 1.0, 0.6, 0.4),
-(3, 1.0, 0.1, 0.01, 0.5, 1.0, 0.6, 0.4);
+-- -------------------------------------------------------
+INSERT INTO priority_rules (course_id, weight_cpi, weight_dept_match) VALUES
+(1, 1.0, 0.5),
+(2, 1.0, 0.5),
+(3, 1.0, 0.5);
 
---------------------------------------------------
--- ENROLLMENTS (Requests now use offering_id + reg_type_id)
---------------------------------------------------
-INSERT INTO enrollments (
-  student_id,
-  offering_id,
-  reg_type_id,
-  intent,
-  status,
-  requested_at
-) VALUES
+-- -------------------------------------------------------
+-- STUDENT TRANSCRIPT
+-- Records courses completed in past semesters.
+-- Durba (5) and Pallavi (6) completed CS371 in sem1 2025 → cleared for CS610.
+-- -------------------------------------------------------
+INSERT INTO student_transcript (student_id, offering_id, grade, is_passed, completed_at) VALUES
+(5, 4, 8.5, TRUE,  '2025-11-30'),   -- Durba     passed CS371 in sem1 2025
+(6, 4, 7.8, TRUE,  '2025-11-30'),   -- Pallavi   passed CS371 in sem1 2025
+(7, 4, 9.8, TRUE,  '2025-11-30'),   -- Jyothika   passed CS371 in sem1 2025
+(8, 4, 8.8, TRUE,  '2025-11-30'),   -- Aayushman   passed CS371 in sem1 2025
+(9, 4, 4.0, FALSE, '2025-11-30');   -- bob  attempted CS371 but failed
 
--- Amit Sharma
-(5, 1, 3, 'major', 'pending', NOW()),
-(5, 2, 3, 'major', 'pending', NOW()),
-
--- Neha Verma
-(6, 1, 3, 'major', 'pending', NOW()),
-(6, 2, 3, 'minor', 'pending', NOW()),
-
--- Ravi Kumar
-(7, 3, 3, 'major', 'pending', NOW()),
-
--- Priya Singh
-(8, 3, 3, 'elective', 'pending', NOW()),
-
--- Arjun Das
-(9, 1, 3, 'major', 'pending', NOW()),
-(9, 2, 3, 'major', 'pending', NOW());
+-- -------------------------------------------------------
+-- ENROLLMENTS (current semester requests)
+-- Only students who have passed CS371 are enrolled in CS610 (offering 2).
+-- Jyothika (7) and Aayushman (8) are correctly NOT enrolled in CS610.
+-- -------------------------------------------------------
+-- INSERT INTO enrollments (student_id, offering_id, reg_type_id, intent, status) VALUES
+-- (5, 1, 3, 'major',    'pending'),   -- Durba     → CS371
+-- (5, 2, 3, 'major',    'pending'),   -- Durba     → CS610 (cleared: passed CS371)
+-- (6, 1, 3, 'major',    'pending'),   -- Pallavi   → CS371
+-- (6, 2, 3, 'minor',    'pending'),   -- Pallavi   → CS610 (cleared: passed CS371)
+-- (9, 3, 3, 'major',    'pending'),   -- Jyothika  → CE683 (no CS610 — failed CS371)
 
 SET FOREIGN_KEY_CHECKS = 1;
