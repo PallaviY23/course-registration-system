@@ -12,21 +12,24 @@ const {
 } = require('../controllers/courseController');
 
 // GET all courses
-router.get('/', getCourses); // working
+router.get('/', getCourses); // working  // working
 
-// student-> request course
-router.post('/request', requestCourseController); // working
+// Student only: Request a course
+router.post('/request', requestCourseController);  // working
 
-// prof -> set weights and max_seats
-router.put('/offering/:id/rules', updateRulesController); // working
 
-// admin -> run allocation
-router.post('/offering/:id/allocate', runAllocationController); 
+// Professor only: Set weights and max_seats
+router.put('/offering/:offering_id/rules', updateRulesController);  // working
+
+// Admin or Professor: Run allocation
+router.post('/offering/:offering_id/allocate', runAllocationController);  
+
 
 // prof -> add course
 router.post('/add', addCourseController); // working
 
 // prof -> add prerequisite for a course
 router.post('/:courseId/prerequisites', addPrerequisiteController); // working
+
 
 module.exports = router;
