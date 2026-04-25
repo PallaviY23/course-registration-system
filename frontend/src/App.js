@@ -194,42 +194,52 @@ function App() {
     });
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     const { username, password } = credentials;
-    const lowerUser = username.toLowerCase();
-    if (username === password && ['student', 'professor', 'admin'].includes(lowerUser)) {
-      if (lowerUser === 'student') {
-        setUser({
-          role: 'student',
-          name: 'Aayushman Kumar',
-          displayName: 'Aayushman Kumar',
-          rollNo: '230029',
-          externalId: '230029',
-          photoUrl: '/user-avatar.png',
+
+    try {
+      const response = await fetch('http://localhost:5000/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Show error feedback
+        setResetFeedback({
+          type: 'error',
+          message: data.message || 'Login failed. Please try again.',
         });
-      } else if (lowerUser === 'professor') {
-        setUser({
-          role: 'professor',
-          name: 'Vinay Kumar Gupta',
-          displayName: 'Vinay Kumar Gupta',
-          facultyId: 'P-CE-1042',
-          externalId: 'P-CE-1042',
-          photoUrl: '/user-avatar.png',
-        });
-      } else if (lowerUser === 'admin') {
-        setUser({
-          role: 'admin',
-          name: 'System Administrator',
-          displayName: 'System Administrator',
-          staffId: 'ADM-001',
-          externalId: 'ADM-001',
-          photoUrl: '/user-avatar.png',
-        });
+        return;
       }
-    } else {
-      // eslint-disable-next-line no-alert
-      alert('Demo login: use the same word for username and password: student, professor, or admin');
+
+      // Successful login - set user with data from API
+      const apiUser = data.user;
+      
+      // Map API response to existing user structure
+      setUser({
+        role: apiUser.role,
+        name: apiUser.name || apiUser.username,
+        displayName: apiUser.name || apiUser.username,
+        rollNo: apiUser.roll_no || apiUser.faculty_id || apiUser.user_id,
+        facultyId: apiUser.faculty_id,
+        staffId: apiUser.user_id,
+        externalId: apiUser.user_id,
+        photoUrl: '/user-avatar.png',
+        token: data.token, // Store token for API calls
+      });
+
+      // Clear credentials and feedback
+      setCredentials({ username: '', password: '' });
+      setResetFeedback(null);
+    } catch (err) {
+      setResetFeedback({
+        type: 'error',
+        message: 'Server error: ' + err.message,
+      });
     }
   };
 

@@ -2,15 +2,15 @@
 -- USERS
 -- -------------------------------------------------------
 INSERT INTO users (user_id, username, email, password_hash, role) VALUES
-(1, 'admin',        'admin@iitk.ac.in',          '$2b$10$admin_hash',  'admin'),
-(2, 'Arnab',        'arnabb@iitk.ac.in',          '$2b$10$prof1_hash',  'professor'),
-(3, 'ritwijb',      'ritwijb@iitk.ac.in',         '$2b$10$prof2_hash',  'professor'),
-(4, 'vinaykg',      'vinaykg@iitk.ac.in',         '$2b$10$prof3_hash',  'professor'),
-(5, 'durbasmriti',  'durbasmrit23@iitk.ac.in',    '$2b$10$std1_hash',   'student'),
-(6, 'rpallavi',     'rpallavi23@iitk.ac.in',      '$2b$10$std2_hash',   'student'),
-(7, 'jyothika',     'serujy23@iitk.ac.in',        '$2b$10$std3_hash',   'student'),
-(8, 'aayushman',    'aayushmank23@iitk.ac.in',    '$2b$10$std4_hash',   'student'),
-(9, 'bob',    'bob23@iitk.ac.in',    '$2b$10$std4_hash',   'student');
+(1, 'admin',        'admin@iitk.ac.in',          '$2b$10$3IvxMI4oXRDOBP7BzyQM8OWJQDbsogZNBQN24CpDrmot/n9iYU3tS',  'admin'),
+(2, 'Arnab',        'arnabb@iitk.ac.in',          '$2b$10$t/pg.8G6HA4S7h4dsXsUlO37IL2ZYgIymG8WVt7Rj.I2gYMv4yq06',  'professor'),
+(3, 'ritwijb',      'ritwijb@iitk.ac.in',         '$2b$10$ZsFBxfGULLbwe4doql6WCeaB739s4QNM9YOZqyK83oUtN1O0DfSTC',  'professor'),
+(4, 'vinaykg',      'vinaykg@iitk.ac.in',         '$2b$10$ZKds0p5TLwCjUS.HwXd8zuPrVTx89pqeDe.sbP7zvbEMwV/9TO5i6',  'professor'),
+(5, 'durbasmriti',  'durbasmrit23@iitk.ac.in',    '$2b$10$KXRAabIwdYBddSVS8UisaeshNWYLDeGIaI8YxoApf0mvoOFKi2qaO',   'student'),
+(6, 'rpallavi',     'rpallavi23@iitk.ac.in',      '$2b$10$NKKgcnalnCxudpiFe55yjeVlh2jUgGpWB6B6c/KPuuzF4EviUkAVe',   'student'),
+(7, 'jyothika',     'serujy23@iitk.ac.in',        '$2b$10$UQ/mHZ2xtFta/Zx2xv0yEu415S4U7FeEqdMgot6V6LiuKP.CmtDHK',   'student'),
+(8, 'aayushman',    'aayushmank23@iitk.ac.in',    '$2b$10$GeBM3/F/pwJsXgtkKnMNHOuXegIJ6dWp6mAaiCVphs1KZc2uxg0.i',   'student'),
+(9, 'bob',    'bob23@iitk.ac.in',    '$2b$10$gmIPl7i/AErIb8cqmL/ppO30wNwfdc8B9k/s2Te71.u/YP48x5QJ.',   'student');
 -- NOTE: removed user_id 9 — was referenced in enrollments but never defined.
 
 -- -------------------------------------------------------
